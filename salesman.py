@@ -1,10 +1,15 @@
 import csv
 import math
 
-# tiny 10
-# small 30
-# medium 100
-# large 1000
+#################################
+#  name   | number of points    #
+#  ------ | ------------------- #
+#  tiny   |      10             #
+#  small  |      30             #
+#  medium |      100            #
+#  large  |      1000           #
+#################################
+name = 'tiny'
 
 def calculate_distance(x1, y1, x2, y2):
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
@@ -22,6 +27,8 @@ def transform_data(input_file, output_file):
     # Calculate distances and write to the output file
     with open(output_file, 'w', newline='') as outfile:
         writer = csv.writer(outfile)
+        num_data_lines = (len(points) * (len(points) - 1))
+        writer.writerow([num_data_lines])
         writer.writerow(['path', 'point1x', 'point1y', 'point2x', 'point2y', 'distance'])  # Write header
 
         for i in range(len(points)):
@@ -35,8 +42,8 @@ def transform_data(input_file, output_file):
     return points
 
 # File paths
-input_file = 'Supercomputer/medium.csv'
-output_file = 'Supercomputer/transformed_data_medium.csv'
+input_file = f'Supercomputer/{name}.csv'
+output_file = f'Supercomputer/transformed_data_{name}.csv'
 
 # Transform the data and get the points
 points = transform_data(input_file, output_file)
