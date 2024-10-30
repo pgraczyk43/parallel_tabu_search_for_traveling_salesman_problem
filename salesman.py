@@ -27,8 +27,8 @@ def transform_data(input_file, output_file):
     # Calculate distances and write to the output file
     with open(output_file, 'w', newline='') as outfile:
         writer = csv.writer(outfile)
-        num_data_lines = (len(points) * (len(points) - 1))
-        writer.writerow([num_data_lines])
+        num_points = len(points)
+        writer.writerow([num_points])
         writer.writerow(['path', 'point1x', 'point1y', 'point2x', 'point2y', 'distance'])  # Write header
 
         for i in range(len(points)):
