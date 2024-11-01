@@ -1,7 +1,7 @@
 import copy
 import random 
 import csv
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 ax_iteration_without_improvment = 100
 max_itteration_for_mval = 100
@@ -37,6 +37,39 @@ def read_csv_to_cost_dict(file_path):
             }
     
     return cost_dict
+
+def plot_points(cost_dict, start_id, path=None):
+    plt.figure(figsize=(10, 10))
+    
+    for (point1_id, point2_id), data in cost_dict.items():
+        point1 = data['point1']
+
+        if point1_id == start_id :
+            plt.scatter(point1['x'], point1['y'], color='red')
+            plt.text(point1['x'], point1['y'], f'{point1_id}', color='red', fontsize=12, ha='right')
+            continue
+        
+        plt.scatter(point1['x'], point1['y'], color='blue')
+        plt.text(point1['x'], point1['y'], f'{point1_id}', color='blue', fontsize=12, ha='right')
+
+    if path:
+        for i in range(len(path) - 1):
+            start_id = path[i]
+            end_id = path[i + 1]
+            
+            start_point = cost_dict.get((start_id, end_id))
+            if start_point:
+                start_coords = start_point['point1'] 
+                end_coords = start_point['point2']
+
+                plt.plot([start_coords['x'], end_coords['x']], [start_coords['y'], end_coords['y']], 'k-', lw=1)
+
+        
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
+    plt.title('Visualization of Points and Paths')
+    plt.grid(True)
+    plt.show()
 
 
 def genarate_random_solution(base_id: int) -> dict:
@@ -84,31 +117,12 @@ def caculate_new_solution(current_soultion: dict,cost_dictionary: dict):
     current_cost = calculate_cost(current_soultion,cost_dictionary)
     itteration_for_mval = random.randint(min_itteration_for_mval,max_itteration_for_mval)
     for _ in range(itteration_for_mval):
-        #strategia bez sortowania - bazowa
         new_solition, moves =  change_solution(current_soultion)
-
-        #sortowanie po odległości
-        # new_solition_unsorted, moves =  change_solution(current_soultion, clinet_weight_map, dron_capacity)
-        # new_solition = sort_nodes_by_distance(1, new_solition_unsorted, cost_dictionary) 
         
         new_cost = calculate_cost(new_solition,cost_dictionary)
         m_value = current_cost - new_cost
         MVal[m_value] = (new_solition, moves)
         
-        # strategia aspiracji plus
-        # if(m_value > 0):
-        #     MVal_2 = {}
-        #     for i in range(50):
-        #         new_solition2, moves =  change_solution(current_soultion, clinet_weight_map, dron_capacity)
-        #         new_cost = calculate_cost(new_solition2,cost_dictionary)
-        #         m_value = current_cost - new_cost
-        #         MVal_2[m_value] = (new_solition2, moves)
-        #         max_m_value2 = max(MVal_2.keys())
-        #         # print("it:", i, m_value)
-        #         # print("max: ", max_m_value2)
-        #     MVal[max_m_value2] = MVal_2[max_m_value2]
-        # # print("maxmax: ", max_m_value2)
-
     max_m_value = max(MVal.keys())
     return MVal[max_m_value]
 
@@ -136,16 +150,6 @@ def tabu_search(iteration_number: int, cost_dictionary: dict, base_id: int):
             best_iteration = i
         cost_history.append(copy.deepcopy( best_cost))
         iteration_without_improvment += 1
-        
-        #strategia dywersyfikacji - metoda zdarzeń krytycznych
-        # if iteration_without_improvment > max_iteration_without_improvment:
-        #     current_solution = genarate_random_solution(drons_list, [client.id for client in client_list], base_id, clinet_weight_map, cost_dictionary)
-        #     tabu.clear()
-        #     iteration_without_improvment = 0
-        #     print("new random solution")
-        #     best_solution = copy.deepcopy(current_solution)
-        #     best_cost = calculate_cost(best_solution,cost_dictionary)
-        #     cost_history.append(copy.deepcopy(best_cost))
 
         for move in moves:
             tabu[move] = cadence
@@ -162,17 +166,20 @@ def tabu_search(iteration_number: int, cost_dictionary: dict, base_id: int):
 
 
 if __name__ == "__main__":
-    file_path = 'transformed_data_tiny.csv'
+    file_path = 'transformed_data_small.csv'
     cost_dictionary = read_csv_to_cost_dict(file_path)
-    best_solution, cost_history, best_iteration = tabu_search(1000, cost_dictionary, 1) 
+    start_id = 1
+    best_solution, cost_history, best_iteration = tabu_search(100, cost_dictionary, start_id) 
+    
+    plot_points(cost_dictionary, start_id, best_solution)
     
     print("best solution: " + str(best_solution))
     print("best iteration: " + str(best_iteration))
     
-    # plt.title('Cost history')
-    # plt.xlabel('iteration')
-    # plt.ylabel('cost')
-    # plt.grid(True)
-    # plt.plot(cost_history)
-    # plt.show()
+    plt.title('Cost history')
+    plt.xlabel('iteration')
+    plt.ylabel('cost')
+    plt.grid(True)
+    plt.plot(cost_history)
+    plt.show()
      
