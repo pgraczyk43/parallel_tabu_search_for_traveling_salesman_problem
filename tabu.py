@@ -41,38 +41,57 @@ def calculate_cost(solution, cost_matrix):
     end_ids = np.array(solution[1:])
     return np.sum(cost_matrix[start_ids, end_ids])
 
-def change_solution(current_solution):
+def change_solution(current_solution, tabu):
+    moves = []
     candidate_solution = current_solution[:]
-    i, j = sorted(random.sample(range(1, len(candidate_solution) - 1), 2))
-    candidate_solution[i:j+1] = reversed(candidate_solution[i:j+1])
-    return candidate_solution
+    for _ in range(10000):
+        i, j = sorted(random.sample(range(1, len(candidate_solution) - 1), 2))
+        move = (i,j)
+        if move not in tabu:
+            candidate_solution[i:j+1] = reversed(candidate_solution[i:j+1])
+            moves.append(move)
+            break
+    return candidate_solution, moves
 
-def caculate_new_solution(current_solution, cost_matrix):
+def caculate_new_solution(current_solution, cost_matrix, tabu):
     MVal = {}
     current_cost = calculate_cost(current_solution, cost_matrix)
-    for _ in range(random.randint(min_itteration_for_mval, max_itteration_for_mval)):
-        new_solution = change_solution(current_solution)
+    # for _ in range(random.randint(min_itteration_for_mval, max_itteration_for_mval)):
+    for _ in range(100):
+        new_solution, moves = change_solution(current_solution, tabu)
         new_cost = calculate_cost(new_solution, cost_matrix)
         m_value = current_cost - new_cost
-        MVal[m_value] = new_solution
+        MVal[m_value] = (new_solution, moves)
     max_m_value = max(MVal.keys())
     return MVal[max_m_value]
 
 def tabu_search(file_path, start_id, iteration_number):
+    global cadence
     cost_matrix = read_csv_to_cost_matrix(file_path)
     current_solution = genarate_random_solution(start_id)
     best_solution = copy.deepcopy(current_solution)
     best_cost = calculate_cost(best_solution, cost_matrix)
     cost_history = [best_cost]
+    tabu = {}
 
     for _ in range(iteration_number):
-        new_solution = caculate_new_solution(current_solution, cost_matrix)
+        new_solution, moves = caculate_new_solution(current_solution, cost_matrix, tabu)
         new_cost = calculate_cost(new_solution, cost_matrix)
         if new_cost < best_cost:
             current_solution = copy.deepcopy(new_solution)
             best_solution = copy.deepcopy(new_solution)
             best_cost = new_cost
         cost_history.append(best_cost)
+        for move in moves:
+            tabu[move] = cadence
+
+        for move_key, cadence in list(tabu.items()):
+            new_cadence = cadence - 1
+            if new_cadence == 0:
+                del tabu[move_key]
+            else:
+                tabu[move_key] = new_cadence
+
     return best_solution, best_cost, cost_history
 
 def plot_points(cost_matrix, start_id, path=None):
@@ -111,7 +130,8 @@ def plot_points(cost_matrix, start_id, path=None):
     plt.show()
 
 if __name__ == "__main__":
-    file_path = r'C:\Users\jakub\Visual Studio Code sem2\Supercomputer\transformed_data_large.csv'
+    # file_path = r'C:\Users\jakub\Visual Studio Code sem2\Supercomputer\transformed_data_large.csv'
+    file_path = 'transformed_data_medium.csv'
     start_id = 1
     total_iterations = 1000
 
@@ -124,7 +144,7 @@ if __name__ == "__main__":
     print("Best Cost:", best_cost)
     cost_dictionary = read_csv_to_cost_matrix(file_path)
     if best_solution:
-        plot_points(cost_dictionary, start_id, best_solution)
+        # plot_points(cost_dictionary, start_id, best_solution)
         
         # Plot cost history
         plt.figure()
