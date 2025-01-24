@@ -91,8 +91,8 @@ def tabu_search(file_path, start_id, iteration_number, num_threads: int):
 
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
         for _ in range(iteration_number):
-            # num_candidates = random.randint(min_itteration_for_mval, max_itteration_for_mval)
-            num_candidates = 100
+            num_candidates = random.randint(min_itteration_for_mval, max_itteration_for_mval)
+            # num_candidates = 100
             
             futures = [(executor.submit(__search_other_solution,current_solution, cost_matrix, tabu, num_candidates//num_threads)) for _ in range(num_threads)] 
             
@@ -155,14 +155,14 @@ if __name__ == "__main__":
     file_path = 'transformed_data_medium.csv'
     start_id = 1
     total_iterations = 1000
-    num_threads = 6
+    num_threads = 1
 
     start_time = time.time()
     best_solution, best_cost, cost_history = tabu_search(file_path, start_id, total_iterations, num_threads)
     end_time = time.time()
 
     print(f"Execution Time: {end_time - start_time} seconds")
-    print("Best Solution:", best_solution)
+    # print("Best Solution:", best_solution)
     print("Best Cost:", best_cost)
     cost_dictionary = read_csv_to_cost_matrix(file_path)
     if best_solution:
