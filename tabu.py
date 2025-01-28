@@ -56,8 +56,8 @@ def change_solution(current_solution, tabu):
 def caculate_new_solution(current_solution, cost_matrix, tabu):
     MVal = {}
     current_cost = calculate_cost(current_solution, cost_matrix)
-    # for _ in range(random.randint(min_itteration_for_mval, max_itteration_for_mval)):
-    for _ in range(100):
+    for _ in range(random.randint(min_itteration_for_mval, max_itteration_for_mval)):
+    # for _ in range(100):
         new_solution, moves = change_solution(current_solution, tabu)
         new_cost = calculate_cost(new_solution, cost_matrix)
         m_value = current_cost - new_cost
@@ -94,39 +94,47 @@ def tabu_search(file_path, start_id, iteration_number):
 
     return best_solution, best_cost, cost_history
 
-def plot_points(cost_matrix, start_id, path=None):
+def plot_points(file_path, start_id, path=None):
+    coordinates = {}
+    with open(file_path, mode='r', newline='') as csvfile:
+        csvreader = csv.reader(csvfile)
+        next(csvreader)
+        next(csvreader)
+        
+        for row in csvreader:
+            point1_id, point2_id = map(int, row[0].split('-'))
+            point1x, point1y = float(row[1]), float(row[2])
+            point2x, point2y = float(row[3]), float(row[4])
+            
+            if point1_id not in coordinates:
+                coordinates[point1_id] = (point1x, point1y)
+            if point2_id not in coordinates:
+                coordinates[point2_id] = (point2x, point2y)
+    
     plt.figure(figsize=(10, 10))
     
-    num_points = cost_matrix.shape[0]
-
-    # Randomly generate coordinates for each point
-    coordinates = np.random.rand(num_points, 2) * 100  # Scale to visualize better
-
-    # Plot each point
-    for point_id in range(num_points):
-        x, y = coordinates[point_id]
+    for point_id, (x, y) in coordinates.items():
         if point_id == start_id:
-            plt.scatter(x, y, color='red')
+            plt.scatter(x, y, color='red', label='Start/End')
             plt.text(x, y, f'{point_id}', color='red', fontsize=12, ha='right')
         else:
             plt.scatter(x, y, color='blue')
             plt.text(x, y, f'{point_id}', color='blue', fontsize=12, ha='right')
 
-    # Plot paths if provided
     if path:
         for i in range(len(path) - 1):
             start = path[i]
             end = path[i + 1]
-            plt.plot(
-                [coordinates[start, 0], coordinates[end, 0]],
-                [coordinates[start, 1], coordinates[end, 1]],
-                'k-', lw=1
-            )
+            if start in coordinates and end in coordinates:
+                x1, y1 = coordinates[start]
+                x2, y2 = coordinates[end]
+                plt.plot([x1, x2], [y1, y2], 'k-', lw=1)
 
     plt.xlabel('X Coordinate')
     plt.ylabel('Y Coordinate')
     plt.title('Visualization of Points and Paths')
     plt.grid(True)
+    plt.legend()
     plt.show()
 
 if __name__ == "__main__":
@@ -144,7 +152,7 @@ if __name__ == "__main__":
     print("Best Cost:", best_cost)
     cost_dictionary = read_csv_to_cost_matrix(file_path)
     if best_solution:
-        # plot_points(cost_dictionary, start_id, best_solution)
+        plot_points(file_path, start_id, best_solution)
         
         # Plot cost history
         plt.figure()
